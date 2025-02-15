@@ -1,14 +1,19 @@
-# Huawei Mini Library
+# huawei-mini-library
 
-A lightweight Go library designed to simplify communication with the Huawei E5336B dongle. This library provides a straightforward API for interacting with your Huawei dongle, allowing you to manage SMS, monitor device status, and handle network connections with ease.
+[![GoDoc](https://img.shields.io/badge/api-Godoc-blue.svg)](https://pkg.go.dev/github.com/xigmaDev/huawei-mini-library)
+[![Go Report Card](https://goreportcard.com/badge/github.com/xigmaDev/huawei-mini-library)](https://goreportcard.com/report/github.com/xigmaDev/huawei-mini-library)
+[![Issues](https://img.shields.io/github/issues/xigmaDev/huawei-mini-library.svg)](https://github.com/xigmaDev/huawei-mini-library/issues)
 
-## Features
+Package `huawei` provides a lightweight interface for communicating with the Huawei E5336B dongle.
 
-- **Lightweight & Minimal:** Designed for efficient integration with minimal overhead.
-- **Device Communication:** Easily send commands and process responses from the Huawei E5336B.
-- **SMS Management:** Send and receive SMS messages.
-- **Connection Monitoring:** Check device status, signal strength, and network connectivity.
-- **Simple API:** A clean and intuitive interface for quick development.
+This package simplifies interaction with the Huawei E5336B dongle by offering a minimal API for device communication, SMS management, and connection monitoring.
+
+It provides:
+
+ * `NewHuawei` to create a new connection to the device.
+ * `Connect` and `Disconnect` to manage the connection lifecycle.
+ * `GetDeviceInfo` to retrieve detailed device information.
+ * `SendSMS` to send SMS messages through the dongle.
 
 
 thanks to [max246](https://github.com/max246)
