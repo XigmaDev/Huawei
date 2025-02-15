@@ -1,4 +1,4 @@
-package huawei
+package main
 
 import (
 	"bytes"
@@ -405,6 +405,6 @@ func main() {
 		return
 	}
 
-	fmt.Print(h.SendSMS("test", "09153343508"))
+	fmt.Print(h.SendSMS("done ", ""))
 
 }
