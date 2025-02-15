@@ -1,4 +1,4 @@
-package main
+package huawei
 
 var ERROR_SYSTEM_NO_SUPPORT = 100002
 var ERROR_SYSTEM_NO_RIGHTS = "100003"
