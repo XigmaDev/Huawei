@@ -208,6 +208,9 @@ func isErrorResponse(body []byte) bool {
 		return false
 	}
 	fmt.Print(errResp)
+
+	//TODO:error response handlig based on error code
+
 	return errResp.XMLName.Local == "error"
 }
 
@@ -395,16 +398,4 @@ func (h *Huawei) IsConnected() (bool, error) {
 		return false, fmt.Errorf("no connection status received")
 	}
 	return status[0] == "901", nil
-}
-
-func main() {
-	h := NewHuawei("http://192.168.8.1")
-
-	if err := h.Login("admin", "admin"); err != nil {
-		fmt.Println("Login failed:", err)
-		return
-	}
-
-	fmt.Print(h.SendSMS("done ", ""))
-
 }
