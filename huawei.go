@@ -89,6 +89,19 @@ func NewHuawei(ip string) *Huawei {
 	}
 }
 
+// Login authenticates a user with the provided username and password.
+// It encodes the password in base64, constructs an XML payload, and sends
+// a POST request to the Huawei API endpoint for user login. The function
+// sets necessary headers, including a request verification token obtained
+// from the GetToken method. It reads and parses the XML response to determine
+// the login status and returns an error if authentication fails.
+//
+// Parameters:
+//   - username: The username for authentication.
+//   - password: The password for authentication.
+//
+// Returns:
+//   - error: An error if the login process fails, otherwise nil.
 func (h *Huawei) Login(username, password string) error {
 
 	encodedPassword := base64.StdEncoding.EncodeToString([]byte(password))
@@ -141,6 +154,10 @@ func (h *Huawei) Login(username, password string) error {
 	return nil
 }
 
+// GetToken retrieves a token from the Huawei web server.
+// It sends a GET request to the /api/webserver/token endpoint and parses the XML response to extract the token.
+// The token is then stored in the Huawei struct's token field.
+// Returns an error if the request fails, the response cannot be read, or the XML cannot be unmarshaled.
 func (h *Huawei) GetToken() error {
 	req, err := http.NewRequest("GET", h.IP+"/api/webserver/token", nil)
 	if err != nil {
@@ -171,6 +188,17 @@ func (h *Huawei) GetToken() error {
 	return nil
 }
 
+// sendRequest sends an HTTP request to the specified URL with the given method and payload.
+// It sets necessary headers and includes a request verification token.
+//
+// Parameters:
+//   - method: The HTTP method to use (e.g., "GET", "POST").
+//   - url: The URL to send the request to.
+//   - payload: The payload to include in the request body.
+//
+// Returns:
+//   - []byte: The response body as a byte slice.
+//   - error: An error if the request fails or if there is an issue reading the response body.
 func (h *Huawei) sendRequest(method, url, payload string) ([]byte, error) {
 	req, err := http.NewRequest(method, h.IP+url, strings.NewReader(xmlEscape(payload)))
 	if err != nil {
@@ -199,6 +227,18 @@ func (h *Huawei) sendRequest(method, url, payload string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
+// isErrorResponse checks if the provided XML body contains an error response.
+// It unmarshals the XML body into a struct and verifies if the root element is "error".
+// If the unmarshalling fails, it returns false.
+// If the root element is "error", it returns true.
+//
+// Parameters:
+//
+//	body []byte - The XML body to check.
+//
+// Returns:
+//
+//	bool - True if the XML body contains an error response, false otherwise.
 func isErrorResponse(body []byte) bool {
 	var errResp struct {
 		XMLName xml.Name `xml:"error"`
@@ -214,6 +254,12 @@ func isErrorResponse(body []byte) bool {
 	return errResp.XMLName.Local == "error"
 }
 
+// Connect establishes a connection to the Huawei device by sending a POST request
+// to the /api/dialup/dial endpoint with a predefined payload. It returns an error
+// if the request fails or if the response indicates a failure.
+//
+// Returns:
+//   - error: An error object if the connection attempt fails, otherwise nil.
 func (h *Huawei) Connect() error {
 	payload := "<request><Action>1</Action></request>"
 	body, err := h.sendRequest("POST", "/api/dialup/dial", payload)
@@ -226,6 +272,13 @@ func (h *Huawei) Connect() error {
 	return nil
 }
 
+// Disconnect sends a request to disconnect the Huawei device.
+// It constructs an XML payload with the action to disconnect,
+// sends the request to the "/api/dialup/dial" endpoint, and
+// checks the response for errors.
+//
+// Returns an error if the request fails or if the response
+// indicates a failure to disconnect.
 func (h *Huawei) Disconnect() error {
 	payload := "<request><Action>0</Action></request>"
 	body, err := h.sendRequest("POST", "/api/dialup/dial", payload)
@@ -238,6 +291,15 @@ func (h *Huawei) Disconnect() error {
 	return nil
 }
 
+// SendSMS sends an SMS message to a specified phone number using the Huawei API.
+// It constructs an XML payload with the message details and sends an HTTP POST request.
+//
+// Parameters:
+//   - msg: The message content to be sent.
+//   - phone: The recipient's phone number.
+//
+// Returns:
+//   - error: An error if the SMS sending fails, otherwise nil.
 func (h *Huawei) SendSMS(msg, phone string) error {
 	url := "/api/sms/send-sms"
 	date := time.Now().Format("2006-01-02 15:04:05")
@@ -288,6 +350,23 @@ func (h *Huawei) SendSMS(msg, phone string) error {
 	return nil
 }
 
+// GetSmsCount retrieves the count of SMS messages from the Huawei device.
+// It sends a GET request to the /api/sms/sms-count endpoint and parses the response.
+//
+// Returns a slice of strings containing the counts of various SMS categories:
+// - LocalUnread: Count of unread messages in local storage.
+// - LocalInbox: Count of messages in the local inbox.
+// - LocalOutbox: Count of messages in the local outbox.
+// - LocalDraft: Count of draft messages in local storage.
+// - LocalDeleted: Count of deleted messages in local storage.
+// - SimUnread: Count of unread messages on the SIM card.
+// - SimInbox: Count of messages in the SIM card inbox.
+// - SimOutbox: Count of messages in the SIM card outbox.
+// - SimDraft: Count of draft messages on the SIM card.
+// - LocalMax: Maximum number of messages that can be stored locally.
+// - SimMax: Maximum number of messages that can be stored on the SIM card.
+//
+// Returns an error if the request fails or the response cannot be parsed.
 func (h *Huawei) GetSmsCount() ([]string, error) {
 	body, err := h.sendRequest("GET", "/api/sms/sms-count", "")
 	if err != nil {
@@ -317,6 +396,13 @@ func (h *Huawei) GetSmsCount() ([]string, error) {
 	}, nil
 }
 
+// GetSmsList retrieves a list of SMS messages from the Huawei device.
+// It sends a POST request to the /api/sms/sms-list endpoint with the necessary payload.
+// The function returns a slice of SMS messages and an error if any occurred during the process.
+//
+// Returns:
+//   - []SMS: A slice of SMS messages retrieved from the device.
+//   - error: An error if the request failed or the response could not be unmarshaled.
 func (h *Huawei) GetSmsList() ([]SMS, error) {
 	payload := `<request>
 		<PageIndex>1</PageIndex>
@@ -342,6 +428,14 @@ func (h *Huawei) GetSmsList() ([]SMS, error) {
 	return resp.Messages, nil
 }
 
+// DeleteSMS deletes an SMS message from the Huawei device by its index.
+// It sends a POST request to the "/api/sms/delete-sms" endpoint with the specified index.
+//
+// Parameters:
+//   - index: The index of the SMS message to be deleted.
+//
+// Returns:
+//   - error: An error if the request fails or if the response indicates a failure.
 func (h *Huawei) DeleteSMS(index int) error {
 	payload := fmt.Sprintf("<request><Index>%d</Index></request>", index)
 	body, err := h.sendRequest("POST", "/api/sms/delete-sms", payload)
@@ -354,6 +448,33 @@ func (h *Huawei) DeleteSMS(index int) error {
 	return nil
 }
 
+// GetConnectionStatus retrieves the current connection status from the Huawei device.
+// It sends a GET request to the /api/monitoring/status endpoint and parses the XML response.
+//
+// Returns a slice of strings containing various connection status details, or an error if the request fails or the response cannot be parsed.
+//
+// The returned slice contains the following elements in order:
+// - ConnectionStatus
+// - SignalStrength
+// - SignalIcon
+// - CurrentNetworkType
+// - CurrentServiceDomain
+// - RoamingStatus
+// - BatteryStatus
+// - BatteryLevel
+// - SimlockStatus
+// - WanIPAddress
+// - PrimaryDNS
+// - SecondaryDNS
+// - CurrentWifiUser
+// - TotalWifiUser
+// - ServiceStatus
+// - SimStatus
+// - WifiStatus
+//
+// Returns:
+// - []string: A slice of strings containing the connection status details.
+// - error: An error if the request fails or the response cannot be parsed.
 func (h *Huawei) GetConnectionStatus() ([]string, error) {
 	body, err := h.sendRequest("GET", "/api/monitoring/status", "")
 	if err != nil {
@@ -389,6 +510,9 @@ func (h *Huawei) GetConnectionStatus() ([]string, error) {
 	}, nil
 }
 
+// IsConnected checks the connection status of the Huawei device.
+// It returns true if the device is connected (status code "901"), otherwise false.
+// If there is an error retrieving the connection status, it returns false along with the error.
 func (h *Huawei) IsConnected() (bool, error) {
 	status, err := h.GetConnectionStatus()
 	if err != nil {
@@ -400,6 +524,16 @@ func (h *Huawei) IsConnected() (bool, error) {
 	return status[0] == "901", nil
 }
 
+// xmlEscape escapes special characters in a string for safe inclusion in XML.
+// It converts characters like <, >, &, ', and " to their corresponding XML escape sequences.
+//
+// Parameters:
+//
+//	s - The input string that needs to be escaped.
+//
+// Returns:
+//
+//	A string with special characters replaced by their XML escape sequences.
 func xmlEscape(s string) string {
 	var b bytes.Buffer
 	xml.EscapeText(&b, []byte(s))
