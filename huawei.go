@@ -1,4 +1,4 @@
-package main
+package huawei
 
 import (
 	"bytes"
@@ -398,4 +398,10 @@ func (h *Huawei) IsConnected() (bool, error) {
 		return false, fmt.Errorf("no connection status received")
 	}
 	return status[0] == "901", nil
+}
+
+func xmlEscape(s string) string {
+	var b bytes.Buffer
+	xml.EscapeText(&b, []byte(s))
+	return b.String()
 }
